@@ -45,7 +45,7 @@ The Glitch SDK enables you to:
 2. **Add dependencies** to your `<ProjectName>.Build.cs` file:
    ```csharp
    PublicDependencyModuleNames.AddRange(new string[] { 
-       "Core", "HTTP", "Json", "JsonUtilities" 
+       "Core", "HTTP", "Json", "JsonUtilities", "zlib", "nghttp2", "OpenSSL" 
    });
    
    // Enable libcurl (usually available by default in UE)
