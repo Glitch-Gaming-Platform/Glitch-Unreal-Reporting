@@ -82,6 +82,50 @@ namespace GlitchSDK
         PurchaseData() = default;
         PurchaseData(const std::string& installID) : GameInstallID(installID) {}
     };
+
+    /**
+     * Data structure for Cloud Save slots
+     */
+    struct GameSaveData {
+        int SlotIndex;                  // 0-99
+        std::string PayloadBase64;      // Binary data encoded as Base64
+        std::string Checksum;           // SHA-256 of raw binary
+        int BaseVersion;                // The version currently on client (0 for new)
+        std::string SaveType;           // "manual", "auto", "checkpoint", "quicksave"
+        std::string ClientTimestamp;    // ISO-8601 format
+        std::string MetadataJSON;       // Optional extra info (level, map name, etc)
+    
+        GameSaveData() : SlotIndex(0), BaseVersion(0), SaveType("manual") {}
+    };
+
+    /**
+     * Data structure for Behavioral Telemetry
+     */
+    struct GameEventData {
+        std::string GameInstallID;      // UUID from handshake
+        std::string StepKey;            // e.g., "prologue", "boss_fight"
+        std::string ActionKey;          // e.g., "died", "item_crafted"
+        std::string MetadataJSON;       // Optional context
+        std::string EventTimestamp;     // ISO-8601
+    
+        GameEventData() {}
+    };
+
+
+    // Updated to include analyticsSessionId for idle/fraud detection
+    std::string SendHeartbeat(
+        const std::string& titleToken,
+        const std::string& titleId,
+        const std::string& installId,
+        const std::string& analyticsSessionId = ""
+    );
+
+    // The Aegis Handshake: Verify license on startup
+    std::string ValidateInstall(
+        const std::string& titleToken,
+        const std::string& titleId,
+        const std::string& installId
+    );
     
     /**
      * Core Functions
@@ -166,6 +210,31 @@ namespace GlitchSDK
      * @return JSON string representation
      */
     std::string PurchaseToJSON(const PurchaseData& purchase);
+
+    std::string ListSaves(const std::string& titleToken, const std::string& titleId, const std::string& installId);
+
+    std::string StoreSave(const std::string& titleToken, const std::string& titleId, const std::string& installId, const GameSaveData& saveData);
+
+    std::string ResolveSaveConflict(
+        const std::string& titleToken, 
+        const std::string& titleId, 
+        const std::string& installId, 
+        const std::string& saveId, 
+        const std::string& conflictId, 
+        const std::string& choice // "keep_server" or "use_client"
+    );
+
+    // --- 3. Behavioral Telemetry ---
+
+    std::string RecordEvent(const std::string& titleToken, const std::string& titleId, const GameEventData& event);
+
+    std::string RecordEventsBulk(const std::string& titleToken, const std::string& titleId, const std::vector<GameEventData>& events);
+
+    // --- 4. Wishlist Intelligence (GWI) ---
+
+    std::string ToggleWishlist(const std::string& userJwt, const std::string& titleId, const std::string& fingerprintId = "");
+
+    std::string UpdateWishlistScore(const std::string& userJwt, const std::string& titleId, int score);
 
     // Internal helper functions
     namespace Internal 
